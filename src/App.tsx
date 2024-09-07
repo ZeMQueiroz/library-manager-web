@@ -1,26 +1,36 @@
+// src/App.tsx
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import theme from './theme';
+import Home from './pages/Home';
+import MediaList from './pages/MediaList';
+import Navbar from './components/Navbar';
+import Breadcrumbs from './components/Breadcrumbs';
+import MediaItemDetail from './pages/MediaItemDetail';
+import CustomLists from './pages/CustomLists';
+import CustomListDetail from './pages/CustomListDetail';
+import Recommendations from './pages/Recommendations';
 
-function App() {
+const App: React.FC = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        <Navbar />
+        <Breadcrumbs />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/media" element={<MediaList />} />
+          <Route path="/media/:id" element={<MediaItemDetail />} />
+          <Route path="/lists" element={<CustomLists />} />
+          <Route path="/lists/:id" element={<CustomListDetail />} />
+          <Route path="/recommendations" element={<Recommendations />} />
+        </Routes>
+      </Router>
+    </ThemeProvider>
   );
-}
+};
 
 export default App;
