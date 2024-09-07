@@ -1,46 +1,54 @@
-# Getting Started with Create React App
+# Library Manager
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+**Library Manager** is a web application, in progress, designed to help users organize and manage their media collections, including books and anime. The app connects to a backend API to handle data management, providing an intuitive and responsive interface for cataloging and tracking your media items.
 
-## Available Scripts
+## Key Features
 
-In the project directory, you can run:
+- **Media Management**: Add books and anime to your library with detailed information such as title, description, status (e.g., To Read, Reading, Completed), progress tracking, and ratings.
+- **Custom Lists**: Create custom lists categorized as Books or Anime to organize your collection according to your preferences. Only items matching the category of the list can be added.
+- **Recommendations**: A dedicated recommendations page to explore suggestions based on your interests (feature in progress).
+- **Dark Mode**: Supports dark mode for a comfortable viewing experience in low-light environments.
+- **Filtering and Sorting**: Easily find and organize media items using various filters and sorting options.
+- **CRUD Operations**: Perform Create, Read, Update, and Delete operations on media items and custom lists with interactive dialogs and confirmation prompts.
+- **Responsive Design**: The app is designed to be fully responsive, providing a seamless user experience across all devices, from desktops to mobile phones.
 
-### `npm start`
+## Technology Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- **Frontend**:
+  - **React** with **TypeScript** for building the user interface.
+  - **Material-UI** for UI components and styling.
+  - **React Router** for navigation.
+  - **Axios** for making API requests.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## API Integration
 
-### `npm test`
+This frontend application connects to a backend API for data management. For details on the API, you can check the API repository [here](https://github.com/ZeMQueiroz/library-manager-api).
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Getting Started
 
-### `npm run build`
+Follow these steps to get started with the Library Manager application:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Prerequisites
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- Node.js and npm installed.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Installation
 
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/ZeMQueiroz/library-manager-web.git
+   ```
+2. **Navigate to the Project Directory**:
+   ```bash
+   cd library-manager-web
+   ```
+3. **Install Dependencies**:
+   ```bash
+   npm install
+   ```
+4. **Start the Development Server**:
+   ```bash
+   npm start
+   ```
+5. **Access the App**:
+   • Open your browser and go to http://localhost:3000 to start using the app.
