@@ -11,8 +11,17 @@ export interface MediaItem {
 }
 
 export interface CustomList {
+  category: number;
   id: number;
   name: string;
   items: MediaItem[];
   description: string;
+  background_image: string | null;
+}
+
+export interface UpdateCustomListPayload {
+  name: string;
+  items: MediaItem[];
+  background_image?: string | null;
+  category: number;
 }

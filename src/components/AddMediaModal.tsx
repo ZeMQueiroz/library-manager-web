@@ -1,4 +1,3 @@
-// src/components/AddMediaModal.tsx
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -13,6 +12,8 @@ import {
   InputLabel,
   SelectChangeEvent,
   Box,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 
 interface AddMediaModalProps {
@@ -37,9 +38,13 @@ const AddMediaModal: React.FC<AddMediaModalProps> = ({
     notes: '',
     category: '',
   });
-
-  // Log changes to debug the state
-  console.log('Current Media State:', newMedia);
+  const [error, setError] = useState({
+    category: false,
+    title: false,
+    status: false,
+  });
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
 
   const handleChange = (
     event:
@@ -48,11 +53,30 @@ const AddMediaModal: React.FC<AddMediaModalProps> = ({
   ) => {
     const { name, value } = event.target;
     setNewMedia({ ...newMedia, [name!]: value });
+    setError({ ...error, [name!]: false }); // Reset error when user starts typing
   };
 
   const handleSubmit = () => {
+    // Check for required fields
+    const { category, title, status } = newMedia;
+    if (!category || !title || !status) {
+      setError({
+        category: !category,
+        title: !title,
+        status: !status,
+      });
+      setSnackbarMessage('Please fill in all required fields.');
+      setSnackbarOpen(true);
+      return;
+    }
+
     onSubmit(newMedia);
     setNewMedia({ title: '', status: '', notes: '', category: '' });
+    setError({ category: false, title: false, status: false });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
   };
 
   const getStatusOptions = () => {
@@ -96,85 +120,112 @@ const AddMediaModal: React.FC<AddMediaModalProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Add New Media</DialogTitle>
-      <DialogContent>
-        <Box
-          component="form"
-          sx={{
-            '& .MuiFormControl-root': {
-              mb: 2,
-              width: '100%',
-            },
-            '& .MuiInputLabel-outlined': {
-              zIndex: 1,
-            },
-            '& .MuiOutlinedInput-root': {
-              position: 'relative',
-            },
-          }}
+    <>
+      <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+        <DialogTitle>Add New Media</DialogTitle>
+        <DialogContent>
+          <Box
+            component="form"
+            sx={{
+              '& .MuiFormControl-root': {
+                mb: 2,
+                width: '100%',
+              },
+              '& .MuiInputLabel-outlined': {
+                zIndex: 1,
+              },
+              '& .MuiOutlinedInput-root': {
+                position: 'relative',
+              },
+            }}
+          >
+            <FormControl
+              fullWidth
+              variant="outlined"
+              margin="dense"
+              error={error.category}
+            >
+              <InputLabel>Category</InputLabel>
+              <Select
+                name="category"
+                value={newMedia.category}
+                onChange={handleChange}
+                label="Category"
+                MenuProps={{
+                  PaperProps: { sx: { maxHeight: 200, width: 'auto' } },
+                }}
+              >
+                <MenuItem value="1">Book</MenuItem>
+                <MenuItem value="2">Anime</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              autoFocus
+              margin="dense"
+              label="Title"
+              type="text"
+              fullWidth
+              name="title"
+              value={newMedia.title}
+              onChange={handleChange}
+              variant="outlined"
+              error={error.title}
+              helperText={error.title ? 'Title is required' : ''}
+            />
+            <FormControl
+              fullWidth
+              variant="outlined"
+              margin="dense"
+              error={error.status}
+            >
+              <InputLabel>Status</InputLabel>
+              <Select
+                name="status"
+                value={newMedia.status}
+                onChange={handleChange}
+                label="Status"
+                MenuProps={{
+                  PaperProps: { sx: { maxHeight: 200, width: 'auto' } },
+                }}
+              >
+                {getStatusOptions()}
+              </Select>
+            </FormControl>
+            <TextField
+              margin="dense"
+              label="Notes"
+              type="text"
+              fullWidth
+              name="notes"
+              value={newMedia.notes}
+              onChange={handleChange}
+              variant="outlined"
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={onClose} variant="outlined" color="error">
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} variant="contained" color="primary">
+            Add Media
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity="error"
+          sx={{ width: '100%' }}
         >
-          <FormControl fullWidth variant="outlined" margin="dense">
-            <InputLabel>Category</InputLabel>
-            <Select
-              name="category"
-              value={newMedia.category}
-              onChange={handleChange}
-              label="Category"
-              MenuProps={{
-                PaperProps: { sx: { maxHeight: 200, width: 'auto' } },
-              }}
-            >
-              <MenuItem value="1">Book</MenuItem>
-              <MenuItem value="2">Anime</MenuItem>
-            </Select>
-          </FormControl>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Title"
-            type="text"
-            fullWidth
-            name="title"
-            value={newMedia.title}
-            onChange={handleChange}
-            variant="outlined"
-          />
-          <FormControl fullWidth variant="outlined" margin="dense">
-            <InputLabel>Status</InputLabel>
-            <Select
-              name="status"
-              value={newMedia.status}
-              onChange={handleChange}
-              label="Status"
-              MenuProps={{
-                PaperProps: { sx: { maxHeight: 200, width: 'auto' } },
-              }}
-            >
-              {getStatusOptions()}
-            </Select>
-          </FormControl>
-          <TextField
-            margin="dense"
-            label="Notes"
-            type="text"
-            fullWidth
-            name="notes"
-            value={newMedia.notes}
-            onChange={handleChange}
-            variant="outlined"
-          />
-        </Box>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} variant="outlined" color="error">
-          Cancel
-        </Button>
-        <Button onClick={handleSubmit} variant="contained" color="primary">
-          Add Media
-        </Button>
-      </DialogActions>
-    </Dialog>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+    </>
   );
 };
 

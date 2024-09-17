@@ -1,12 +1,16 @@
 // src/services/api.ts
 import axios from 'axios';
-import { MediaItem } from '../types/types';
+import { MediaItem, UpdateCustomListPayload } from '../types/types';
 
-const API_BASE_URL = 'http://127.0.0.1:8000/api/';
+const API_BASE_URL =
+  'https://library-manager-api-production.up.railway.app/api/';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
 export const fetchMediaItems = (query: string = '') =>
@@ -26,7 +30,7 @@ export const createCustomList = (listData: {
 export const fetchCustomList = (id: string) => api.get(`/lists/${id}/`);
 export const updateCustomList = (
   id: number,
-  listData: { name: string; items: MediaItem[] }
+  listData: UpdateCustomListPayload // Use the updated type here
 ) => api.put(`/lists/${id}/`, listData);
 export const deleteCustomList = (id: number) => api.delete(`/lists/${id}/`);
 export const addItemToList = (listId: number, itemId: number) =>

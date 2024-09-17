@@ -1,4 +1,3 @@
-// src/pages/CustomLists.tsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -24,14 +23,15 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  Stack,
+  Badge,
 } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
+import { Edit, Add } from '@mui/icons-material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { CustomList } from '../types/types';
 
 const CustomLists: React.FC = () => {
   const [customLists, setCustomLists] = useState<CustomList[]>([]);
-  console.log('🚀🚀 ~  customLists:', customLists);
   const [loading, setLoading] = useState<boolean>(true);
   const [newListName, setNewListName] = useState<string>('');
   const [newListCategory, setNewListCategory] = useState<number>(1); // Default to 'Book'
@@ -40,14 +40,19 @@ const CustomLists: React.FC = () => {
   const [editListName, setEditListName] = useState<string>('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [listToDelete, setListToDelete] = useState<number | null>(null);
+  const [totalLists, setTotalLists] = useState<number | null>(0);
+  const [selectedBackground, setSelectedBackground] = useState<string | null>(
+    null
+  );
+  const [editListItems, setEditListItems] = useState<string[]>([]);
 
   const navigate = useNavigate();
 
-  // Fetch all custom lists on component mount
   useEffect(() => {
     fetchCustomLists()
       .then((response) => {
-        setCustomLists(response.data);
+        setCustomLists(response.data.results);
+        setTotalLists(response.data.count);
         setLoading(false);
       })
       .catch((error) => {
@@ -56,9 +61,8 @@ const CustomLists: React.FC = () => {
       });
   }, []);
 
-  // Handle creating a new custom list
   const handleCreateList = () => {
-    if (!newListName.trim()) return; // Avoid creating lists with empty names
+    if (!newListName.trim()) return;
 
     createCustomList({
       name: newListName,
@@ -69,20 +73,18 @@ const CustomLists: React.FC = () => {
         setCustomLists([...customLists, response.data]);
         setOpenCreateDialog(false);
         setNewListName('');
-        setNewListCategory(1); // Reset category to default 'Book'
+        setNewListCategory(1);
       })
       .catch((error) => {
         console.error('Failed to create list', error);
       });
   };
 
-  // Handle deleting a custom list
   const handleDeleteList = (listId: number) => {
     setDeleteDialogOpen(true);
     setListToDelete(listId);
   };
 
-  // Confirm deletion
   const confirmDeleteList = () => {
     if (listToDelete) {
       deleteCustomList(listToDelete)
@@ -98,26 +100,44 @@ const CustomLists: React.FC = () => {
     }
   };
 
-  // Handle updating a custom list
   const handleOpenEditDialog = (list: CustomList) => {
     setEditListId(list.id);
     setEditListName(list.name);
+    setEditListItems(list.items.map((item) => item.cover_url));
+    setSelectedBackground(list.items[0]?.cover_url || null);
   };
 
   const handleUpdateList = () => {
     if (!editListName.trim() || editListId === null) return;
 
-    updateCustomList(editListId, { name: editListName, items: [] })
+    // Find the current list's category by ID
+    const currentList = customLists.find((list) => list.id === editListId);
+    const currentCategory = currentList
+      ? currentList.category
+      : newListCategory;
+
+    updateCustomList(editListId, {
+      name: editListName,
+      items: [], // Update items as necessary
+      background_image: selectedBackground, // Include the selected background image
+      category: currentCategory, // Include the category
+    })
       .then((response) => {
         setCustomLists(
           customLists.map((list) =>
             list.id === editListId
-              ? { ...list, name: response.data.name }
+              ? {
+                  ...list,
+                  name: response.data.name,
+                  background_image: response.data.background_image, // Update the background image from the response
+                  category: response.data.category,
+                }
               : list
           )
         );
         setEditListId(null);
         setEditListName('');
+        setSelectedBackground(null);
       })
       .catch((error) => {
         console.error('Failed to update list', error);
@@ -125,68 +145,148 @@ const CustomLists: React.FC = () => {
   };
 
   return (
-    <Box className="p-4 min-h-screen flex flex-col items-center dark:bg-dark-300">
-      <Typography
-        variant="h4"
-        component="h2"
-        color="primary"
-        className="font-bold mb-4"
+    <Box className="p-4 min-h-screen flex flex-col dark:bg-dark-300">
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={3}
       >
-        Custom Lists
+        <Typography variant="h4" color="primary" fontWeight="bold">
+          Custom Lists
+        </Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => setOpenCreateDialog(true)}
+          startIcon={<Add />}
+        >
+          Create New
+        </Button>
+      </Stack>
+
+      <Typography variant="body2" color="textSecondary" mb={2}>
+        {totalLists} lists
       </Typography>
 
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={() => setOpenCreateDialog(true)}
-      >
-        Create New List
-      </Button>
-
-      <Box className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-4 w-full">
+      <Box display="flex" flexWrap="wrap" gap={3}>
         {loading ? (
-          <CircularProgress />
+          <Box display="flex" justifyContent="center" width="100%">
+            <CircularProgress />
+          </Box>
         ) : (
-          customLists.map((list) => (
-            <Card
-              key={list.id}
-              className="shadow-md dark:bg-dark-300 z-10"
-              onClick={() => navigate(`/lists/${list.id}`)}
-            >
-              <CardContent>
-                <Typography
-                  variant="h5"
-                  component="div"
-                  className="font-bold mb-2"
+          customLists.map((list) => {
+            const categoryLabel = list.category === 1 ? 'Book' : 'Anime';
+            const categoryColor = list.category === 1 ? '#0077b6' : '#f07900';
+
+            return (
+              <Box
+                key={list.id}
+                sx={{ flex: '0 0 280px', position: 'relative' }}
+              >
+                <Card
+                  className="shadow-md hover:shadow-lg transition-shadow"
+                  sx={{
+                    width: '260px',
+                    height: '200px',
+                    position: 'relative',
+                    borderRadius: 2,
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    backgroundImage: `url(${list.background_image})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    transition: 'transform 0.3s, box-shadow 0.3s',
+                    '&:hover': {
+                      transform: 'scale(1.05)',
+                      boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)',
+                    },
+                    '&:hover .MuiCardActions-root': { opacity: 1 },
+                  }}
+                  onClick={() => navigate(`/lists/${list.id}`)}
                 >
-                  {list.name}
-                </Typography>
-                <Typography color="text.secondary">
-                  {list.items.length} items
-                </Typography>
-                <Box className="mt-2 flex justify-between">
-                  <IconButton
-                    color="primary"
-                    onClick={(event) => {
-                      event.stopPropagation(); // Prevent card click
-                      handleOpenEditDialog(list);
+                  <CardContent
+                    sx={{
+                      backgroundColor:
+                        list.items.length > 0 ? 'rgba(0, 0, 0, 0.6)' : '',
+                      color: 'white',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      padding: 2,
                     }}
                   >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    color="error"
-                    onClick={(event) => {
-                      event.stopPropagation(); // Prevent card click
-                      handleDeleteList(list.id);
+                    <Badge
+                      badgeContent={categoryLabel}
+                      color="primary"
+                      sx={{
+                        mb: 1,
+                        '& .MuiBadge-badge': {
+                          fontSize: '0.75rem',
+                          height: 'auto',
+                          padding: '1px 6px',
+                          borderRadius: '12px',
+                          backgroundColor: categoryColor,
+                          marginRight: '14px',
+                        },
+                      }}
+                    />
+                    <Typography
+                      variant="h6"
+                      component="div"
+                      fontWeight="bold"
+                      mb={1}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        maxWidth: '100%',
+                      }}
+                    >
+                      {list.name}
+                    </Typography>
+                    <Typography color="textSecondary">
+                      {list.items.length} items
+                    </Typography>
+                  </CardContent>
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      bottom: 8,
+                      right: 8,
+                      display: 'flex',
+                      flexDirection: 'row',
+                      gap: 1,
+                      opacity: 0,
+                      transition: 'opacity 0.3s',
                     }}
+                    className="MuiCardActions-root"
                   >
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-              </CardContent>
-            </Card>
-          ))
+                    <IconButton
+                      color="primary"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleOpenEditDialog(list);
+                      }}
+                    >
+                      <Edit />
+                    </IconButton>
+                    <IconButton
+                      color="error"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleDeleteList(list.id);
+                      }}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
+                </Card>
+              </Box>
+            );
+          })
         )}
       </Box>
 
@@ -234,6 +334,7 @@ const CustomLists: React.FC = () => {
         onClose={() => {
           setEditListId(null);
           setEditListName('');
+          setSelectedBackground(null); // Reset selection when dialog is closed
         }}
       >
         <DialogTitle>Edit List</DialogTitle>
@@ -247,12 +348,41 @@ const CustomLists: React.FC = () => {
             value={editListName}
             onChange={(e) => setEditListName(e.target.value)}
           />
+          {editListItems.length > 0 && (
+            <Box sx={{ mt: 2, maxHeight: '150px', overflowY: 'auto' }}>
+              <Typography variant="body2" mb={1}>
+                Select Background Image:
+              </Typography>
+              <Box display="flex" flexWrap="wrap" gap={1}>
+                {editListItems.map((url, index) => (
+                  <img
+                    key={index}
+                    src={url}
+                    alt={`cover ${index}`}
+                    style={{
+                      width: '60px',
+                      height: '60px',
+                      objectFit: 'cover',
+                      cursor: 'pointer',
+                      borderRadius: '4px',
+                      border:
+                        selectedBackground === url
+                          ? '2px solid #007BFF'
+                          : '2px solid transparent',
+                    }}
+                    onClick={() => setSelectedBackground(url)}
+                  />
+                ))}
+              </Box>
+            </Box>
+          )}
         </DialogContent>
         <DialogActions>
           <Button
             onClick={() => {
               setEditListId(null);
               setEditListName('');
+              setSelectedBackground(null);
             }}
             color="secondary"
           >

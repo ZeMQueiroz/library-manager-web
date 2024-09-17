@@ -13,10 +13,11 @@ import {
   Button,
   Card,
   CardContent,
+  Typography,
+  Pagination, // Import Pagination component
 } from '@mui/material';
 import AddMediaModal from '../components/AddMediaModal';
 import MediaCard from '../components/MediaCard';
-
 import { MediaItem } from '../types/types';
 
 const MediaList: React.FC = () => {
@@ -28,24 +29,25 @@ const MediaList: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<string>('');
   const [sortOrder, setSortOrder] = useState<string>('title');
   const [openModal, setOpenModal] = useState<boolean>(false);
+  const [page, setPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [totalItems, setTotalItems] = useState<number>(0);
 
   const fetchFilteredItems = () => {
     setLoading(true);
-    let query = '';
+    let query = `?page=${page}&page_size=24`;
 
     if (searchTerm) query += `&search=${searchTerm}`;
     if (filterCategory) query += `&category=${filterCategory}`;
     if (filterStatus) query += `&status=${filterStatus}`;
     if (sortOrder) query += `&ordering=${sortOrder}`;
 
-    if (query.startsWith('&')) {
-      query = '?' + query.slice(1);
-    }
-
     fetchMediaItems(query)
       .then((response) => {
-        const data: MediaItem[] = response.data;
-        setMediaItems(data || []);
+        const { results, count } = response.data;
+        setMediaItems(results || []);
+        setTotalPages(Math.ceil(count / 24));
+        setTotalItems(count);
         setLoading(false);
       })
       .catch((err) => {
@@ -67,7 +69,7 @@ const MediaList: React.FC = () => {
 
   useEffect(() => {
     fetchFilteredItems();
-  }, [searchTerm, filterCategory, filterStatus, sortOrder]);
+  }, [searchTerm, filterCategory, filterStatus, sortOrder, page]);
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
@@ -116,6 +118,13 @@ const MediaList: React.FC = () => {
         alert('Failed to create media item. Please try again.');
         console.error(err);
       });
+  };
+
+  const handlePageChange = (
+    event: React.ChangeEvent<unknown>,
+    value: number
+  ) => {
+    setPage(value);
   };
 
   const getStatusOptions = () => {
@@ -225,6 +234,12 @@ const MediaList: React.FC = () => {
         </Button>
       </div>
 
+      <div className="mb-4 pl-40">
+        <Typography variant="body2" component="h1" color="gray">
+          {totalItems} items
+        </Typography>
+      </div>
+
       {/* Add Media Modal */}
       <AddMediaModal
         open={openModal}
@@ -251,10 +266,20 @@ const MediaList: React.FC = () => {
       ) : (
         <div className="grid gap-4 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-6 lg:px-40">
           {mediaItems.map((item) => (
-            <MediaCard key={item.id} item={item} /> // Use MediaCard component here
+            <MediaCard key={item.id} item={item} />
           ))}
         </div>
       )}
+
+      {/* Pagination */}
+      <Box display="flex" justifyContent="center" mt={4}>
+        <Pagination
+          count={totalPages}
+          page={page}
+          onChange={handlePageChange}
+          color="primary"
+        />
+      </Box>
     </div>
   );
 };

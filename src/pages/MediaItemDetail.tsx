@@ -91,13 +91,14 @@ const MediaItemDetail: React.FC = () => {
 
       // Fetch custom lists
       fetchCustomLists()
-        .then((response) => setCustomLists(response.data))
+        .then((response) => setCustomLists(response.data.results || []))
+
         .catch((error) => console.error('Failed to fetch custom lists', error));
     }
   }, [id]);
 
   useEffect(() => {
-    if (mediaItem) {
+    if (mediaItem && Array.isArray(customLists)) {
       setFilteredLists(
         customLists.filter((list) => list.category === mediaItem.category)
       );
